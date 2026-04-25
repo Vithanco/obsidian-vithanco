@@ -1,0 +1,11 @@
+{
+  "id": "obsidian-vithanco",
+  "name": "Vithanco",
+  "version": "1.0.0",
+  "minAppVersion": "1.4.0",
+  "description": "Render Vithanco diagrams (IBIS, Concept Maps, Timelines, and more) directly in your notes using VGL code blocks.",
+  "author": "Klaus Kneupner",
+  "authorUrl": "https://vithanco.com",
+  "fundingUrl": "https://ko-fi.com/vithanco",
+  "isDesktopOnly": true
+}

@@ -1,0 +1,19 @@
+.vithanco-container {
+    text-align: center;
+    margin: 1em 0;
+    overflow-x: auto;
+}
+
+.vithanco-container svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.vithanco-error {
+    color: var(--text-error);
+    background: var(--background-modifier-error);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    white-space: pre-wrap;
+}

@@ -1,0 +1,19 @@
+{
+  "name": "obsidian-vithanco",
+  "version": "1.0.0",
+  "description": "Obsidian plugin for rendering Vithanco diagrams (VGL).",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production"
+  },
+  "dependencies": {
+    "@bjorn3/browser_wasi_shim": "^0.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "esbuild": "^0.24.0",
+    "obsidian": "latest",
+    "typescript": "^5.0.0"
+  }
+}
