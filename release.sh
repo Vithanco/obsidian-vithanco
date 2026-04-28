@@ -81,24 +81,17 @@ if ! gh auth status >/dev/null 2>&1; then
     exit 1
 fi
 
-# ---- 3. (Optional) Refresh VGraphWasm.wasm from the VGraph monorepo -------
+# ---- 3. (Optional) Copy VGraphWasm.wasm from the VGraph monorepo ----------
 
 if [[ -n "${VGRAPH_REPO:-}" ]]; then
     if [[ ! -d "$VGRAPH_REPO" ]]; then
         echo "Error: VGRAPH_REPO ('$VGRAPH_REPO') does not exist."
         exit 1
     fi
-    if [[ ! -x "$VGRAPH_REPO/build.sh" ]]; then
-        echo "Error: $VGRAPH_REPO/build.sh not found or not executable."
-        exit 1
-    fi
-
-    echo "Rebuilding VGraph (release) at $VGRAPH_REPO..."
-    (cd "$VGRAPH_REPO" && ./build.sh --release)
 
     SRC_WASM="$VGRAPH_REPO/website/Package/VGraphWasm.wasm"
     if [[ ! -f "$SRC_WASM" ]]; then
-        echo "Error: $SRC_WASM not produced by build.sh."
+        echo "Error: $SRC_WASM not found. Run ./build.sh in the VGraph repo first."
         exit 1
     fi
 
@@ -106,13 +99,13 @@ if [[ -n "${VGRAPH_REPO:-}" ]]; then
 
     if [[ -n "$(git status --porcelain VGraphWasm.wasm)" ]]; then
         WASM_SIZE=$(stat -f "%z" VGraphWasm.wasm 2>/dev/null || stat -c "%s" VGraphWasm.wasm)
-        echo "VGraphWasm.wasm refreshed ($WASM_SIZE bytes) — will be committed with the release."
+        echo "VGraphWasm.wasm refreshed from VGRAPH_REPO ($WASM_SIZE bytes) — will be committed with the release."
     else
-        echo "VGraphWasm.wasm unchanged."
+        echo "VGraphWasm.wasm unchanged (matches VGRAPH_REPO)."
     fi
 else
     echo "VGRAPH_REPO not set — using the committed VGraphWasm.wasm as-is."
-    echo "  (Set VGRAPH_REPO to refresh the engine before releasing.)"
+    echo "  (Set VGRAPH_REPO to copy a freshly built WASM from the VGraph monorepo.)"
 fi
 
 # ---- 4. Bump versions in manifest.json, package.json, versions.json -------
@@ -160,7 +153,16 @@ echo ""
 # ---- 6. Commit, tag, push -------------------------------------------------
 
 git add manifest.json package.json versions.json VGraphWasm.wasm
-git commit -m "Release $VERSION"
+
+# Only commit if something is actually staged. If the version files already
+# matched $VERSION (e.g. re-running the script, or first release at 1.0.0),
+# the bump is a no-op and we just tag the current HEAD as the release.
+if git diff --cached --quiet; then
+    echo "No file changes to commit; tagging current HEAD as $VERSION."
+else
+    git commit -m "Release $VERSION"
+fi
+
 git tag "$VERSION"
 
 echo "Pushing commit and tag..."
