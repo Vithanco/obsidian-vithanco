@@ -9,6 +9,10 @@
     height: auto;
 }
 
+.vithanco-error-block {
+    margin: 1em 0;
+}
+
 .vithanco-error {
     color: var(--text-error);
     background: var(--background-modifier-error);
@@ -16,4 +20,15 @@
     border-radius: 4px;
     font-size: 0.9em;
     white-space: pre-wrap;
+    margin: 0;
+}
+
+.vithanco-error-help {
+    margin: 6px 0 0 0;
+    font-size: 0.85em;
+    color: var(--text-muted);
+}
+
+.vithanco-error-help a {
+    color: var(--text-accent);
 }

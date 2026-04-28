@@ -1,5 +1,7 @@
 # Vithanco for Obsidian
 
+[![Sponsor](https://img.shields.io/github/sponsors/Vithanco?label=Sponsor&logo=GitHub&color=ea4aaa)](https://github.com/sponsors/Vithanco)
+
 Render **Vithanco diagrams** directly inside your notes — IBIS, Concept Maps, Decision Trees, Goal Trees, Causal Loop Diagrams, and more — using a simple `vgl` code block.
 
 > **Vithanco** = **Vi**sual **Th**inking **an**d **Co**mmunication. **VGL** (Vithanco Graph Language) is a compact text format for these diagrams.
@@ -26,7 +28,12 @@ The block is replaced with a rendered SVG in reading view.
 
 IBIS, BBS, Impact Mapping, Concept Map, Current Reality Tree (CRT), Evaporating Cloud (EC), Future Reality Tree (FRT), Prerequisite Tree (PRT), Transition Tree (TRT), Attack-Defense Tree, Goal Tree, Causal Loop Diagram (CLD), Decision Tree, Timeline.
 
-See the [VGL Guide](https://github.com/Vithanco/VGraph/blob/main/docs/VGL_GUIDE.md) for syntax.
+## Learn the language
+
+- **[VGL Syntax Guide](https://vithanco.com/tools/VGL_GUIDE/index.html)** — full reference for the language
+- **[Notations Gallery](https://vithanco.com)** — examples and use cases for every supported notation
+
+You can also open these from inside Obsidian: open the command palette and search for *Vithanco: Open VGL syntax guide* or *Vithanco: Insert IBIS example*. There's a settings tab with the same links under **Settings → Community Plugins → Vithanco**.
 
 ## Installation
 
@@ -59,12 +66,13 @@ The Vithanco rendering engine is compiled from Swift to WebAssembly and embedded
 
 ## Support
 
-If you find this useful, [buy me a coffee](https://ko-fi.com/vithanco). The plugin will always be free and open source.
+If you find this useful, please consider [sponsoring on GitHub](https://github.com/sponsors/Vithanco). The plugin will always be free and open source.
 
 ## Links
 
+- Vithanco website (notations gallery): https://vithanco.com
+- VGL syntax guide: https://vithanco.com/tools/VGL_GUIDE/index.html
 - VGraph monorepo (Swift source, MCP server, CLI): https://github.com/Vithanco/VGraph
-- Vithanco website: https://vithanco.com
 - Issues: https://github.com/Vithanco/obsidian-vithanco/issues
 
 ## License
