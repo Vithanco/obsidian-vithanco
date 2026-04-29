@@ -53,7 +53,7 @@ You can also open these from inside Obsidian: open the command palette and searc
 
 - Obsidian 1.4.0 or newer
 - Desktop only (mobile support planned)
-- Internet on first launch (Graphviz layout engine is loaded from a CDN; cached afterwards)
+- Internet on first launch — the Graphviz layout engine ([`@hpcc-js/wasm`](https://github.com/hpcc-systems/hpcc-js-wasm)) is loaded from the [jsDelivr](https://www.jsdelivr.com/) CDN to compute diagram layouts, then cached by Electron. No other network calls are made; the plugin does not read or write files outside your vault.
 
 ## How it works
 
@@ -74,6 +74,11 @@ If you find this useful, please consider [sponsoring on GitHub](https://github.c
 - VGL syntax guide: https://vithanco.com/tools/VGL_GUIDE/index.html
 - VGraph monorepo (Swift source, MCP server, CLI): https://github.com/Vithanco/VGraph
 - Issues: https://github.com/Vithanco/obsidian-vithanco/issues
+
+## Acknowledgements
+
+- [Graphviz](https://graphviz.org/) — layout engine, via [`@hpcc-js/wasm`](https://github.com/hpcc-systems/hpcc-js-wasm) (Apache-2.0), loaded from [jsDelivr](https://www.jsdelivr.com/) at runtime
+- [`@bjorn3/browser_wasi_shim`](https://github.com/bjorn3/browser_wasi_shim) (MIT/Apache-2.0) — bundled to run the Vithanco WebAssembly engine
 
 ## License
 
