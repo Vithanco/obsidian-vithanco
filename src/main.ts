@@ -48,7 +48,14 @@ export default class VithancoPlugin extends Plugin {
 
             try {
                 const svg = this.renderVGL(source.trim());
-                el.innerHTML = svg;
+                const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+                const svgEl = doc.documentElement;
+                if (!svgEl || svgEl.tagName.toLowerCase() !== 'svg') {
+                    this.renderError(el, 'Failed to parse rendered SVG.', false);
+                    return;
+                }
+                el.empty();
+                el.appendChild(svgEl);
                 el.addClass('vithanco-container');
             } catch (err) {
                 const msg = err instanceof Error ? err.message : String(err);
