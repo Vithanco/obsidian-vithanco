@@ -1,7 +1,7 @@
 {
   "id": "vithanco",
   "name": "Vithanco",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "1.4.0",
   "description": "Render Vithanco diagrams (IBIS, Concept Maps, Timelines, Theory of Constraints, Impact Mapping, Causal Loop Diagrams, and more) in your notes using VGL code blocks.",
   "author": "Klaus Kneupner",
