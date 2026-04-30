@@ -20,17 +20,6 @@ export default defineConfig([
             'obsidianmd/ui/sentence-case': [
                 'warn',
                 {
-                    acronyms: [
-                        'VGL',
-                        'IBIS',
-                        'BBS',
-                        'CLD',
-                        'CRT',
-                        'EC',
-                        'FRT',
-                        'PRT',
-                        'TRT',
-                    ],
                     brands: ['GitHub', 'Vithanco', 'Obsidian'],
                 },
             ],

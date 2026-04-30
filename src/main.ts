@@ -65,7 +65,7 @@ export default class VithancoPlugin extends Plugin {
 
         this.addCommand({
             id: 'open-vgl-guide',
-            name: 'Open VGL syntax guide',
+            name: 'Open vgl syntax guide',
             callback: () => window.open(URL_GUIDE),
         });
 
@@ -77,7 +77,7 @@ export default class VithancoPlugin extends Plugin {
 
         this.addCommand({
             id: 'insert-ibis-example',
-            name: 'Insert IBIS example',
+            name: 'Insert ibis example',
             editorCallback: (editor: Editor) => {
                 editor.replaceSelection(IBIS_EXAMPLE);
             },
@@ -93,7 +93,7 @@ export default class VithancoPlugin extends Plugin {
         if (withSyntaxHelp) {
             const help = el.createEl('p', { cls: 'vithanco-error-help' });
             help.appendText('See the ');
-            help.createEl('a', { text: 'VGL syntax guide', href: URL_GUIDE });
+            help.createEl('a', { text: 'Syntax guide', href: URL_GUIDE });
             help.appendText(' for help.');
         }
     }
@@ -125,14 +125,14 @@ class VithancoSettingTab extends PluginSettingTab {
         containerEl.empty();
 
         containerEl.createEl('p', {
-            text: 'Render VGL (Vithanco Graph Language) diagrams in your notes by writing a `vgl` code block. The block is replaced with a rendered SVG in reading view.',
+            text: 'Render Vithanco diagrams in your notes by writing a `vgl` code block. The block is replaced with a rendered diagram in reading view.',
         });
 
         new Setting(containerEl).setName('Documentation').setHeading();
 
         new Setting(containerEl)
-            .setName('VGL syntax guide')
-            .setDesc('Full reference for the VGL language — node types, edge types, attributes, examples.')
+            .setName('Syntax guide')
+            .setDesc('Full reference for the vgl language — node types, edge types, attributes, examples.')
             .addButton((btn) =>
                 btn
                     .setButtonText('Open guide')
@@ -142,7 +142,7 @@ class VithancoSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Notations gallery')
-            .setDesc('Browse all supported notations (IBIS, CLD, concept maps, timelines, …) with examples and use cases.')
+            .setDesc('Browse all supported notations (ibis, cld, concept maps, timelines, …) with examples and use cases.')
             .addButton((btn) =>
                 btn.setButtonText('Browse').onClick(() => window.open(URL_GALLERY)),
             );
