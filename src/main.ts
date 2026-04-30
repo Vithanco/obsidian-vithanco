@@ -31,7 +31,7 @@ export default class VithancoPlugin extends Plugin {
     private renderVGL: ((vgl: string) => string) | null = null;
     private initPromise: Promise<void> | null = null;
 
-    async onload() {
+    onload() {
         this.initPromise = this.initializeRenderer();
 
         this.registerMarkdownCodeBlockProcessor('vgl', async (source, el) => {
@@ -142,7 +142,7 @@ class VithancoSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Notations gallery')
-            .setDesc('Browse all supported notations (IBIS, CLD, Concept Maps, Timelines, …) with examples and use cases.')
+            .setDesc('Browse all supported notations (IBIS, CLD, concept maps, timelines, …) with examples and use cases.')
             .addButton((btn) =>
                 btn.setButtonText('Browse').onClick(() => window.open(URL_GALLERY)),
             );

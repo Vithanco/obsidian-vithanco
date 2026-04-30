@@ -29,7 +29,7 @@ export async function initVithanco(): Promise<(vgl: string) => string> {
     // The WASM binary is embedded at build time (esbuild binary loader),
     // so init() never executes the import.meta.url fetch in Package/index.js.
     const { exports }: { exports: Exports } = await init({
-        module: wasmBinary as Uint8Array,
+        module: wasmBinary,
         getImports: () => ({}),
     });
 
