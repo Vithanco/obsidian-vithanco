@@ -108,7 +108,17 @@ else
     echo "  (Set VGRAPH_REPO to copy a freshly built WASM from the VGraph monorepo.)"
 fi
 
-# ---- 4. Bump versions in manifest.json, package.json, versions.json -------
+# ---- 4. Lint --------------------------------------------------------------
+
+if [[ ! -d node_modules ]]; then
+    echo "Installing dependencies..."
+    npm install --silent
+fi
+
+echo "Running lint..."
+npm run lint --silent
+
+# ---- 5. Bump versions in manifest.json, package.json, versions.json -------
 
 MIN_APP=$(node -p "require('./manifest.json').minAppVersion")
 echo "Bumping version → $VERSION  (minAppVersion: $MIN_APP)"
@@ -125,12 +135,7 @@ v['$VERSION'] = '$MIN_APP';
 fs.writeFileSync('versions.json', JSON.stringify(v, null, 2) + '\n');
 "
 
-# ---- 5. Build -------------------------------------------------------------
-
-if [[ ! -d node_modules ]]; then
-    echo "Installing dependencies..."
-    npm install --silent
-fi
+# ---- 6. Build -------------------------------------------------------------
 
 echo "Building production bundle..."
 npm run build --silent
@@ -150,7 +155,7 @@ for f in main.js manifest.json styles.css; do
 done
 echo ""
 
-# ---- 6. Commit, tag, push -------------------------------------------------
+# ---- 7. Commit, tag, push -------------------------------------------------
 
 git add manifest.json package.json versions.json VGraphWasm.wasm
 
@@ -169,7 +174,7 @@ echo "Pushing commit and tag..."
 git push origin HEAD
 git push origin "$VERSION"
 
-# ---- 7. Create GitHub release with loose assets ---------------------------
+# ---- 8. Create GitHub release with loose assets ---------------------------
 
 echo "Creating GitHub release..."
 gh release create "$VERSION" \
