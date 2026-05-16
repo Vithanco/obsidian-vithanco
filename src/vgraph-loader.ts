@@ -19,7 +19,7 @@ declare global {
 async function loadGraphviz(): Promise<void> {
     // Dynamic URL import — works in Electron's renderer without bundling the ~10 MB library.
     // @ts-ignore
-    const { Graphviz } = await import('https://cdn.jsdelivr.net/npm/@hpcc-js/wasm@2.33.2/dist/graphviz.js');
+    const { Graphviz } = await import('https://cdn.jsdelivr.net/npm/@hpcc-js/wasm-graphviz@1.21.5/dist/index.js');
     const graphviz = await Graphviz.load();
 
     window.graphvizLayout = (dot, engine = 'dot', format = 'svg') =>
