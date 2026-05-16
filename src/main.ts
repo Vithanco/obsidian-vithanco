@@ -1,12 +1,13 @@
 import {
     App,
     Editor,
+    MarkdownView,
     Notice,
     Plugin,
     PluginSettingTab,
     Setting,
 } from 'obsidian';
-import { initVithanco } from './vgraph-loader';
+import { initVithanco, type RenderVGL } from './vgraph-loader';
 
 // External documentation URLs surfaced via README, settings tab, command palette,
 // and inline error messages so users always have a path to the syntax docs.
@@ -28,8 +29,9 @@ vgraph decision: IBIS "Should we ship the plugin?" {
 `;
 
 export default class VithancoPlugin extends Plugin {
-    private renderVGL: ((vgl: string) => string) | null = null;
+    private renderVGL: RenderVGL | null = null;
     private initPromise: Promise<void> | null = null;
+    private lastTheme: 'dark' | 'light' | null = null;
 
     onload() {
         this.initPromise = this.initializeRenderer();
@@ -47,7 +49,7 @@ export default class VithancoPlugin extends Plugin {
             }
 
             try {
-                const svg = this.renderVGL(source.trim());
+                const svg = this.renderVGL(source.trim(), this.isDarkTheme());
                 const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
                 const svgEl = doc.documentElement;
                 if (!svgEl || svgEl.tagName.toLowerCase() !== 'svg') {
@@ -62,6 +64,19 @@ export default class VithancoPlugin extends Plugin {
                 this.renderError(el, msg, true);
             }
         });
+
+        this.lastTheme = this.isDarkTheme() ? 'dark' : 'light';
+        this.registerEvent(
+            this.app.workspace.on('css-change', () => {
+                const next = this.isDarkTheme() ? 'dark' : 'light';
+                if (next === this.lastTheme) return;
+                this.lastTheme = next;
+                this.app.workspace.getLeavesOfType('markdown').forEach((leaf) => {
+                    const view = leaf.view;
+                    if (view instanceof MarkdownView) view.previewMode.rerender(true);
+                });
+            }),
+        );
 
         this.addCommand({
             id: 'open-vgl-guide',
@@ -84,6 +99,10 @@ export default class VithancoPlugin extends Plugin {
         });
 
         this.addSettingTab(new VithancoSettingTab(this.app, this));
+    }
+
+    private isDarkTheme(): boolean {
+        return document.body.classList.contains('theme-dark');
     }
 
     private renderError(el: HTMLElement, message: string, withSyntaxHelp: boolean): void {
