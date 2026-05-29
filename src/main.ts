@@ -49,7 +49,7 @@ export default class VithancoPlugin extends Plugin {
             }
 
             try {
-                const svg = this.renderVGL(source.trim(), this.isDarkTheme());
+                const svg = await this.renderVGL(source.trim(), this.isDarkTheme());
                 const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
                 const svgEl = doc.documentElement;
                 if (!svgEl || svgEl.tagName.toLowerCase() !== 'svg') {
