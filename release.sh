@@ -1,87 +1,68 @@
 #!/bin/bash
-# Cut a release of the Vithanco Obsidian plugin.
+# Bump the Vithanco Obsidian plugin's version and rebuild artifacts.
+# Does NOT commit, tag, push, or publish — those are manual on purpose so the
+# version bump can be folded into whatever commit makes sense.
 #
 # Usage:
-#   ./release.sh <version>
-#   VGRAPH_REPO=/path/to/VGraph ./release.sh <version>
-#
-# Examples:
-#   ./release.sh 1.0.1
-#   VGRAPH_REPO=~/private/swift/VGraph ./release.sh 1.0.2
+#   ./release.sh                  # auto patch bump (e.g. 1.0.4 → 1.0.5)
+#   ./release.sh --minor          # auto minor bump (e.g. 1.0.4 → 1.1.0)
+#   ./release.sh --major          # auto major bump (e.g. 1.0.4 → 2.0.0)
+#   ./release.sh <version>        # explicit version (e.g. 1.0.7)
+#   VGRAPH_REPO=/path/to/VGraph ./release.sh [args]
 #
 # What it does:
-#   1. Validates the version string (semver, no 'v' prefix — Obsidian's rule)
-#   2. (Optional) If $VGRAPH_REPO is set, rebuilds VGraph there and refreshes
-#      VGraphWasm.wasm so the plugin ships against the latest engine.
-#   3. Bumps version in manifest.json, package.json, versions.json
-#   4. Runs npm run build to produce main.js with the WASM embedded
-#   5. Verifies main.js, manifest.json, styles.css exist
-#   6. Commits (incl. updated WASM), tags, pushes
-#   7. Creates a GitHub Release with the three files attached as loose assets
+#   1. Picks the next version (patch unless --minor/--major/explicit given)
+#   2. (Optional) Refreshes VGraphWasm.wasm from $VGRAPH_REPO
+#   3. Lints and builds main.js with the WASM embedded
+#   4. Writes the new version into manifest.json, package.json, versions.json
+#   5. Prints the artifacts and the suggested git command — you commit when ready
 #
 # Prerequisites:
-#   - Run from inside the standalone obsidian-vithanco repo (NOT the VGraph monorepo)
-#   - gh CLI authenticated (`gh auth status`)
-#   - Working tree clean
+#   - npm (and node_modules; auto-installed on first run)
+#   - For publishing to the Obsidian marketplace later: gh CLI + tag + GH Release
 
 set -euo pipefail
 
-# ---- 1. Parse and validate version ----------------------------------------
-
-VERSION="${1:-}"
-if [[ -z "$VERSION" ]]; then
-    echo "Usage: $0 <version>"
-    echo "       VGRAPH_REPO=/path/to/VGraph $0 <version>   (also refresh WASM)"
-    exit 1
-fi
-
-if [[ "$VERSION" == v* ]]; then
-    echo "Error: version must not start with 'v' (Obsidian rejects 'v'-prefixed tags)"
-    exit 1
-fi
-
-if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo "Error: version must be semver (e.g. 1.0.1), got '$VERSION'"
-    exit 1
-fi
-
-# ---- 2. Safety checks -----------------------------------------------------
+# ---- 1. Parse / derive version --------------------------------------------
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 cd "$SCRIPT_DIR"
 
-GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
-if [[ "$GIT_ROOT" != "$SCRIPT_DIR" ]]; then
-    echo "Error: release.sh must be run from the standalone obsidian-vithanco repo root."
-    echo "  Script dir: $SCRIPT_DIR"
-    echo "  Git root:   ${GIT_ROOT:-<not a git repo>}"
-    echo ""
-    echo "If you're still in the VGraph monorepo, sync this folder to the standalone repo first."
-    exit 1
+CURRENT=$(node -p "require('./manifest.json').version")
+
+ARG="${1:-}"
+case "$ARG" in
+    ""|--patch) BUMP=patch ;;
+    --minor)    BUMP=minor ;;
+    --major)    BUMP=major ;;
+    v*)
+        echo "Error: version must not start with 'v' (Obsidian rejects 'v'-prefixed tags)"
+        exit 1
+        ;;
+    *)
+        if ! [[ "$ARG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: version must be semver (e.g. 1.0.1) or one of --patch/--minor/--major, got '$ARG'"
+            exit 1
+        fi
+        BUMP=explicit
+        VERSION="$ARG"
+        ;;
+esac
+
+if [[ "$BUMP" != "explicit" ]]; then
+    VERSION=$(node -e "
+        const [maj, min, pat] = '$CURRENT'.split('.').map(Number);
+        const bump = '$BUMP';
+        const v = bump === 'major' ? [maj+1, 0, 0]
+                : bump === 'minor' ? [maj, min+1, 0]
+                :                    [maj, min, pat+1];
+        console.log(v.join('.'));
+    ")
 fi
 
-if [[ -n "$(git status --porcelain)" ]]; then
-    echo "Error: working tree is not clean. Commit or stash changes first."
-    git status --short
-    exit 1
-fi
+echo "Bumping $CURRENT → $VERSION  ($BUMP)"
 
-if git rev-parse "$VERSION" >/dev/null 2>&1; then
-    echo "Error: tag '$VERSION' already exists."
-    exit 1
-fi
-
-if ! command -v gh >/dev/null 2>&1; then
-    echo "Error: gh CLI not found. Install from https://cli.github.com/"
-    exit 1
-fi
-
-if ! gh auth status >/dev/null 2>&1; then
-    echo "Error: gh CLI not authenticated. Run: gh auth login"
-    exit 1
-fi
-
-# ---- 3. (Optional) Copy VGraphWasm.wasm from the VGraph monorepo ----------
+# ---- 2. (Optional) Copy VGraphWasm.wasm from the VGraph monorepo ----------
 
 if [[ -n "${VGRAPH_REPO:-}" ]]; then
     if [[ ! -d "$VGRAPH_REPO" ]]; then
@@ -96,19 +77,12 @@ if [[ -n "${VGRAPH_REPO:-}" ]]; then
     fi
 
     cp "$SRC_WASM" ./VGraphWasm.wasm
-
-    if [[ -n "$(git status --porcelain VGraphWasm.wasm)" ]]; then
-        WASM_SIZE=$(stat -f "%z" VGraphWasm.wasm 2>/dev/null || stat -c "%s" VGraphWasm.wasm)
-        echo "VGraphWasm.wasm refreshed from VGRAPH_REPO ($WASM_SIZE bytes) — will be committed with the release."
-    else
-        echo "VGraphWasm.wasm unchanged (matches VGRAPH_REPO)."
-    fi
+    echo "VGraphWasm.wasm refreshed from VGRAPH_REPO."
 else
-    echo "VGRAPH_REPO not set — using the committed VGraphWasm.wasm as-is."
-    echo "  (Set VGRAPH_REPO to copy a freshly built WASM from the VGraph monorepo.)"
+    echo "VGRAPH_REPO not set — using the existing VGraphWasm.wasm as-is."
 fi
 
-# ---- 4. Lint --------------------------------------------------------------
+# ---- 3. Lint --------------------------------------------------------------
 
 if [[ ! -d node_modules ]]; then
     echo "Installing dependencies..."
@@ -118,10 +92,9 @@ fi
 echo "Running lint..."
 npm run lint --silent
 
-# ---- 5. Bump versions in manifest.json, package.json, versions.json -------
+# ---- 4. Write the new version to manifest.json, package.json, versions.json
 
 MIN_APP=$(node -p "require('./manifest.json').minAppVersion")
-echo "Bumping version → $VERSION  (minAppVersion: $MIN_APP)"
 
 node -e "
 const fs = require('fs');
@@ -135,7 +108,7 @@ v['$VERSION'] = '$MIN_APP';
 fs.writeFileSync('versions.json', JSON.stringify(v, null, 2) + '\n');
 "
 
-# ---- 6. Build -------------------------------------------------------------
+# ---- 5. Build -------------------------------------------------------------
 
 echo "Building production bundle..."
 npm run build --silent
@@ -149,43 +122,14 @@ done
 
 echo ""
 echo "Build artifacts:"
-for f in main.js manifest.json styles.css; do
+for f in main.js manifest.json styles.css VGraphWasm.wasm; do
     SIZE=$(stat -f "%z" "$f" 2>/dev/null || stat -c "%s" "$f")
-    printf "  %-15s  %s bytes\n" "$f" "$SIZE"
+    printf "  %-18s  %s bytes\n" "$f" "$SIZE"
 done
-echo ""
-
-# ---- 7. Commit, tag, push -------------------------------------------------
-
-git add manifest.json package.json versions.json VGraphWasm.wasm
-
-# Only commit if something is actually staged. If the version files already
-# matched $VERSION (e.g. re-running the script, or first release at 1.0.0),
-# the bump is a no-op and we just tag the current HEAD as the release.
-if git diff --cached --quiet; then
-    echo "No file changes to commit; tagging current HEAD as $VERSION."
-else
-    git commit -m "Release $VERSION"
-fi
-
-git tag "$VERSION"
-
-echo "Pushing commit and tag..."
-git push origin HEAD
-git push origin "$VERSION"
-
-# ---- 8. Create GitHub release with loose assets ---------------------------
-
-echo "Creating GitHub release..."
-gh release create "$VERSION" \
-    --title "$VERSION" \
-    --notes "Release $VERSION" \
-    main.js manifest.json styles.css
 
 echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✓ Release $VERSION published"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo "If this is your first release, submit to the marketplace:"
-echo "  https://github.com/obsidianmd/obsidian-releases (PR to community-plugins.json)"
+echo "✓ Bumped to $VERSION. Commit / tag / publish when you're ready, e.g.:"
+echo "    git add manifest.json package.json versions.json VGraphWasm.wasm"
+echo "    git commit -m \"chore: bump to $VERSION\""
+echo "    git tag $VERSION && git push origin HEAD $VERSION"
+echo "    gh release create $VERSION --title $VERSION --notes \"Release $VERSION\" main.js manifest.json styles.css"

@@ -102,7 +102,7 @@ export default class VithancoPlugin extends Plugin {
     }
 
     private isDarkTheme(): boolean {
-        return document.body.classList.contains('theme-dark');
+        return activeDocument.body.classList.contains('theme-dark');
     }
 
     private renderError(el: HTMLElement, message: string, withSyntaxHelp: boolean): void {
