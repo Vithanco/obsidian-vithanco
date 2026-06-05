@@ -28,6 +28,7 @@ export async function initVithanco(): Promise<RenderVGL> {
         getImports: () => ({}),
     });
 
+    // BEGIN SHARED CORE (keep in lockstep with vscode-vithanco/src/renderer.ts — `just parity`)
     // @hpcc-js/wasm-graphviz can poison its instance after an internal trap
     // ("table index is out of bounds"), so every layout runs on a FRESH
     // instance (unload + load), awaited at JS top level — never nested inside
@@ -60,4 +61,5 @@ export async function initVithanco(): Promise<RenderVGL> {
         }
         return result;
     };
+    // END SHARED CORE
 }

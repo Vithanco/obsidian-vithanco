@@ -72,7 +72,7 @@ if [[ -n "${VGRAPH_REPO:-}" ]]; then
 
     SRC_WASM="$VGRAPH_REPO/website/Package/VGraphWasm.wasm"
     if [[ ! -f "$SRC_WASM" ]]; then
-        echo "Error: $SRC_WASM not found. Run ./build.sh in the VGraph repo first."
+        echo "Error: $SRC_WASM not found. Run 'just build' (or 'just wasm') in the VGraph repo first."
         exit 1
     fi
 
