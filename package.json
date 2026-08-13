@@ -12,13 +12,13 @@
     "@bjorn3/browser_wasi_shim": "^0.3.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.59.1",
-    "@typescript-eslint/parser": "^8.59.1",
-    "esbuild": "^0.25.0",
-    "eslint": "^9.39.4",
-    "eslint-plugin-obsidianmd": "^0.2.8",
+    "@types/node": "^26.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.67.0",
+    "@typescript-eslint/parser": "^8.67.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.8.1",
+    "eslint-plugin-obsidianmd": "^0.4.1",
     "obsidian": "latest",
-    "typescript": "^5.0.0"
+    "typescript": "^7.0.2"
   }
 }
