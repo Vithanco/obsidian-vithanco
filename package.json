@@ -9,7 +9,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@bjorn3/browser_wasi_shim": "^0.3.0"
+    "@bjorn3/browser_wasi_shim": "^0.4.2"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
