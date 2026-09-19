@@ -37,13 +37,15 @@ You can also open these from inside Obsidian: open the command palette and searc
 
 ## Installation
 
-### From the Community Plugins browser (once approved)
+### From the Community Plugins browser (recommended)
 
 1. Open Obsidian → Settings → Community Plugins → Browse
 2. Search for **Vithanco**
 3. Install and enable
 
 ### Manual installation
+
+For a version that isn't in the browser yet, or to install a pre-release:
 
 1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/Vithanco/obsidian-vithanco/releases)
 2. Copy them to `<your-vault>/.obsidian/plugins/vithanco/`
