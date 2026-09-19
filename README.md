@@ -53,14 +53,14 @@ You can also open these from inside Obsidian: open the command palette and searc
 
 - Obsidian 1.4.0 or newer
 - Desktop only (mobile support planned)
-- Internet on first launch — the Graphviz layout engine ([`@hpcc-js/wasm-graphviz`](https://github.com/hpcc-systems/hpcc-js-wasm)) is loaded from the [jsDelivr](https://www.jsdelivr.com/) CDN to compute diagram layouts, then cached by Electron. No other network calls are made; the plugin does not read or write files outside your vault.
+- No internet connection required — everything, including the Graphviz layout engine, is compiled into the bundled WebAssembly module. The plugin makes no network calls and does not read or write files outside your vault.
 
 ## How it works
 
 The Vithanco rendering engine is compiled from Swift to WebAssembly and embedded in the plugin. When you open a note containing a `vgl` code block, the plugin:
 
 1. Parses the VGL source
-2. Computes layout via Graphviz (loaded once from jsDelivr)
+2. Computes layout via Graphviz, running in-process inside the same WebAssembly module
 3. Produces a styled SVG
 4. Injects it into the rendered Markdown
 
@@ -77,7 +77,7 @@ If you find this useful, please consider [sponsoring on GitHub](https://github.c
 
 ## Acknowledgements
 
-- [Graphviz](https://graphviz.org/) — layout engine, via [`@hpcc-js/wasm-graphviz`](https://github.com/hpcc-systems/hpcc-js-wasm) (Apache-2.0), loaded from [jsDelivr](https://www.jsdelivr.com/) at runtime
+- [Graphviz](https://graphviz.org/) (EPL-1.0) — layout engine, compiled into the WebAssembly module via [SwiftGraphviz](https://github.com/Vithanco/swiftGraphviz)
 - [`@bjorn3/browser_wasi_shim`](https://github.com/bjorn3/browser_wasi_shim) (MIT/Apache-2.0) — bundled to run the Vithanco WebAssembly engine
 
 ## License
