@@ -79,7 +79,7 @@ If you find this useful, please consider [sponsoring on GitHub](https://github.c
 
 ## Acknowledgements
 
-- [Graphviz](https://graphviz.org/) (EPL-1.0) — layout engine, compiled into the WebAssembly module via [SwiftGraphviz](https://github.com/Vithanco/swiftGraphviz)
+- [Graphviz](https://graphviz.org/) (EPL-2.0) — layout engine, compiled into the WebAssembly module via [SwiftGraphviz](https://github.com/Vithanco/swiftGraphviz)
 - [`@bjorn3/browser_wasi_shim`](https://github.com/bjorn3/browser_wasi_shim) (MIT/Apache-2.0) — bundled to run the Vithanco WebAssembly engine
 
 ## License
