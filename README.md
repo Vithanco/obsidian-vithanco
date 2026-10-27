@@ -81,7 +81,9 @@ If you find this useful, please consider [sponsoring on GitHub](https://github.c
 
 - [Graphviz](https://graphviz.org/) (EPL-2.0) — layout engine, compiled into the WebAssembly module via [SwiftGraphviz](https://github.com/Vithanco/swiftGraphviz)
 - [`@bjorn3/browser_wasi_shim`](https://github.com/bjorn3/browser_wasi_shim) (MIT/Apache-2.0) — bundled to run the Vithanco WebAssembly engine
+- The [Swift](https://swift.org) runtime (Apache-2.0 with Runtime Library Exception) — linked into the WebAssembly module
+- [DM Sans](https://github.com/googlefonts/dm-fonts) (SIL OFL 1.1) — the typeface the diagrams use
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+Apache-2.0 — see [LICENSE](LICENSE). Third-party components are listed in [NOTICE](NOTICE). The engine source is at https://github.com/Vithanco/VGraph.
