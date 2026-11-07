@@ -94,19 +94,7 @@ npm run lint --silent
 
 # ---- 4. Write the new version to manifest.json, package.json, versions.json
 
-MIN_APP=$(node -p "require('./manifest.json').minAppVersion")
-
-node -e "
-const fs = require('fs');
-for (const f of ['manifest.json', 'package.json']) {
-    const j = JSON.parse(fs.readFileSync(f, 'utf8'));
-    j.version = '$VERSION';
-    fs.writeFileSync(f, JSON.stringify(j, null, 2) + '\n');
-}
-const v = JSON.parse(fs.readFileSync('versions.json', 'utf8'));
-v['$VERSION'] = '$MIN_APP';
-fs.writeFileSync('versions.json', JSON.stringify(v, null, 2) + '\n');
-"
+node scripts/set-version.mjs "$VERSION"
 
 # ---- 5. Build -------------------------------------------------------------
 
