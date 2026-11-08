@@ -1,7 +1,6 @@
 # Builds this plugin against the VGraph engine. The sources import the engine's glue
 # from ../../website/Package, so the plugin is checked out inside VGraph, as it is on
-# the maintainer's machine. Nothing is published from here: `just release-engine` in
-# VGraph starts the dispatch below, and `just publish-plugins` releases.
+# the maintainer's machine. It only checks: releases stay on that machine (VGraph ADR 0036).
 # Actions are pinned to a full commit SHA, as in VGraph.
 name: CI
 
@@ -10,13 +9,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      vgraph_ref:
-        description: VGraph tag or branch to build against (empty means its latest v* tag, else main)
-        required: false
-      release_version:
-        description: Open a bump PR to this version once the build passes (empty means none)
-        required: false
 
 permissions:
   contents: read
@@ -30,27 +22,10 @@ jobs:
     name: Build against the VGraph engine
     runs-on: ubuntu-24.04
     timeout-minutes: 60
-    env:
-      RELEASE_VERSION: ${{ inputs.release_version }}
     steps:
-      - name: Choose the VGraph ref
-        id: vgraph
-        env:
-          VGRAPH_REF: ${{ inputs.vgraph_ref }}
-        run: |
-          if [ -n "$RELEASE_VERSION" ] && ! [[ "$RELEASE_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
-            echo "::error::release_version must be plain semver, got '$RELEASE_VERSION'"
-            exit 1
-          fi
-          if [ -z "$VGRAPH_REF" ]; then
-            VGRAPH_REF=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/Vithanco/VGraph.git 'v*' \
-              | head -1 | sed 's|.*refs/tags/||')
-          fi
-          echo "ref=${VGRAPH_REF:-main}" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: Vithanco/VGraph
-          ref: ${{ steps.vgraph.outputs.ref }}
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -68,7 +43,7 @@ jobs:
         with:
           path: website/Package
           key: engine-${{ steps.engine.outputs.sha }}
-      # The container comes from the ref being built, so a Swift bump there needs no change here.
+      # The container comes from VGraph's .swift-version, so a Swift bump there needs no change here.
       - name: Build the engine
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -81,7 +56,6 @@ jobs:
         working-directory: obsidian-vithanco
         run: |
           npm ci
-          if [ -n "$RELEASE_VERSION" ]; then node scripts/set-version.mjs "$RELEASE_VERSION"; fi
           npm test
           npm run lint
           npm run typecheck
@@ -102,35 +76,3 @@ jobs:
             obsidian-vithanco/manifest.json
             obsidian-vithanco/styles.css
             obsidian-vithanco/VGraphWasm.wasm
-
-  bump-pr:
-    # Only this job can write, and it installs and runs no dependencies.
-    # GitHub needs Settings > Actions > General > "Allow GitHub Actions to create and
-    # approve pull requests". A PR opened with this token starts no workflow; the
-    # build job above has already checked the same version and engine.
-    name: Open the bump PR
-    needs: build
-    if: inputs.release_version != ''
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: write
-      pull-requests: write
-    env:
-      VERSION: ${{ inputs.release_version }}
-      VGRAPH_REF: ${{ inputs.vgraph_ref }}
-      GH_TOKEN: ${{ github.token }}
-      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: obsidian-vithanco
-          path: ${{ runner.temp }}/plugin
-      - name: Commit the bump and open the PR
-        run: |
-          cp "$RUNNER_TEMP/plugin/VGraphWasm.wasm" VGraphWasm.wasm
-          node scripts/set-version.mjs "$VERSION"
-          ./scripts/open-bump-pr.sh "$VERSION" \
-            "Bumps to $VERSION with the engine from VGraph $VGRAPH_REF. Built, linted and typechecked in $RUN_URL. After merging, run \`just plugins-pull\`, \`just release\` and \`just publish-plugins\` in VGraph." \
-            manifest.json package.json versions.json VGraphWasm.wasm
