@@ -2,18 +2,49 @@ import esbuild from 'esbuild';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { gzipSync } from 'zlib';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProd = process.argv[2] === 'production';
 
-// Refresh the local VGraphWasm.wasm from the monorepo build output, when present.
-// (In a standalone clone of the plugin repo, the committed WASM is used as-is.)
-const wasmSrc = path.join(__dirname, '../website/Package/VGraphWasm.wasm');
+// The engine (wasm + its JS glue) is committed, because Obsidian's directory builds
+// this repo on its own. Inside the VGraph monorepo the copies are refreshed from
+// the engine just built, so they cannot drift from it there.
+const enginePackage = path.join(__dirname, '../website/Package');
+const vendored = path.join(__dirname, 'vendor/Package');
 const wasmDst = path.join(__dirname, 'VGraphWasm.wasm');
-if (fs.existsSync(wasmSrc)) {
-    fs.copyFileSync(wasmSrc, wasmDst);
-    console.log('Refreshed VGraphWasm.wasm from ../website/Package/');
+if (fs.existsSync(enginePackage)) {
+    fs.copyFileSync(path.join(enginePackage, 'VGraphWasm.wasm'), wasmDst);
+    for (const file of fs.readdirSync(enginePackage)) {
+        if (/\.(js|d\.ts)$/.test(file)) fs.copyFileSync(path.join(enginePackage, file), path.join(vendored, file));
+    }
+    for (const file of ['browser.js', 'browser.d.ts', 'browser.worker.js']) {
+        fs.copyFileSync(path.join(enginePackage, 'platforms', file), path.join(vendored, 'platforms', file));
+    }
+    console.log('Refreshed VGraphWasm.wasm and vendor/Package from ../website/Package/');
 }
+
+// A production bundle embeds the WASM as base64, so a debug engine (90 MB) became
+// a 115 MB main.js in 1.0.9. Stripped release builds carry no DWARF sections.
+if (isProd) {
+    const wasm = fs.readFileSync(wasmDst);
+    if (wasm.length > 20_000_000 || wasm.includes('.debug_info')) {
+        console.error(`Refusing to bundle ${wasm.length} bytes of unoptimized VGraphWasm.wasm. Build it with 'just release' first.`);
+        process.exit(1);
+    }
+}
+
+// Obsidian Sync's Standard plan will not sync a file over 5 MB, and main.js carries
+// the engine. Gzipped it fits; src/vgraph-loader.ts unpacks it on load.
+const gzippedWasm = {
+    name: 'gzipped-wasm',
+    setup(build) {
+        build.onLoad({ filter: /\.wasm$/ }, (args) => ({
+            contents: gzipSync(fs.readFileSync(args.path), { level: 9 }),
+            loader: 'binary',
+        }));
+    },
+};
 
 const context = await esbuild.context({
     entryPoints: ['src/main.ts'],
@@ -29,19 +60,13 @@ const context = await esbuild.context({
     format: 'cjs',
     platform: 'browser',
     target: 'es2020',
-    // Resolve npm packages from the plugin's own node_modules even when processing
-    // files imported from ../website/Package/ (outside this tree).
-    nodePaths: [path.join(__dirname, 'node_modules')],
-    // Embed VGraphWasm.wasm directly into main.js as a Uint8Array constant.
-    // This makes the plugin self-contained: Obsidian's marketplace installer only
-    // downloads main.js + manifest.json + styles.css, so the WASM has to live in main.js.
-    loader: {
-        '.wasm': 'binary',
-    },
+    // Obsidian's installer only downloads main.js + manifest.json + styles.css,
+    // so the WASM has to live in main.js.
+    plugins: [gzippedWasm],
     logLevel: 'info',
-    // Silence warnings from BridgeJS-generated files in ../website/Package/:
+    // Silence warnings from the BridgeJS-generated files in vendor/Package/:
     //   empty-import-meta — index.js uses import.meta.url for a fetch path we never hit
-    //     (we pass `module: wasmBinary` directly, so the fetch branch is dead code).
+    //     (we pass `module` directly, so the fetch branch is dead code).
     //   duplicate-object-key — generator emits two `getImports` keys in browser.js.
     // Both are upstream generator quirks; suppressing keeps the build output clean.
     logOverride: {
