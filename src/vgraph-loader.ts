@@ -1,16 +1,17 @@
-// @ts-ignore - resolved via allowJs; types in ../../website/Package/index.d.ts
-import { init } from '../../website/Package/index.js';
-import type { Exports } from '../../website/Package/bridge-js.js';
+import { init } from '../vendor/Package/index.js';
+import type { Exports } from '../vendor/Package/bridge-js.js';
+import gzippedWasm from '../VGraphWasm.wasm';
 
 export type RenderVGL = (vgl: string, darkMode?: boolean) => Promise<string>;
-// @ts-ignore - esbuild's binary loader turns this into a Uint8Array
-import wasmBinary from '../VGraphWasm.wasm';
+
+async function gunzip(bytes: Uint8Array<ArrayBuffer>): Promise<ArrayBuffer> {
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+    return new Response(stream).arrayBuffer();
+}
 
 export async function initVithanco(): Promise<RenderVGL> {
-    // The WASM binary is embedded at build time (esbuild binary loader),
-    // so init() never executes the import.meta.url fetch in Package/index.js.
     const { exports }: { exports: Exports } = await init({
-        module: wasmBinary,
+        module: await gunzip(gzippedWasm),
         getImports: () => ({}),
     });
 

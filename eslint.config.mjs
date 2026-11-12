@@ -26,18 +26,6 @@ export default defineConfig([
         },
     },
     {
-        // The Graphviz library is loaded from a CDN at runtime (no static types).
-        // Suppress strict-type-mode noise for that one file.
-        files: ['src/vgraph-loader.ts'],
-        rules: {
-            '@typescript-eslint/no-unsafe-assignment': 'off',
-            '@typescript-eslint/no-unsafe-call': 'off',
-            '@typescript-eslint/no-unsafe-member-access': 'off',
-            '@typescript-eslint/no-unsafe-return': 'off',
-            '@typescript-eslint/no-unsafe-argument': 'off',
-        },
-    },
-    {
-        ignores: ['main.js', 'main.js.map', 'node_modules/**', 'website/**'],
+        ignores: ['main.js', 'main.js.map', 'node_modules/**', 'vendor/**'],
     },
 ]);
