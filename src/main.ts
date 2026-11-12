@@ -6,6 +6,7 @@ import {
     Plugin,
     PluginSettingTab,
     Setting,
+    type SettingDefinitionItem,
 } from 'obsidian';
 import { initVithanco, type RenderVGL } from './vgraph-loader';
 
@@ -139,6 +140,45 @@ class VithancoSettingTab extends PluginSettingTab {
         this.plugin = plugin;
     }
 
+    getSettingDefinitions(): SettingDefinitionItem[] {
+        return [
+            {
+                name: 'Usage',
+                desc: 'Render Vithanco diagrams in your notes by writing a `vgl` code block. The block is replaced with a rendered diagram in reading view.',
+            },
+            {
+                type: 'group',
+                heading: 'Documentation',
+                items: [
+                    {
+                        name: 'Syntax guide',
+                        desc: 'Full reference for the vgl language — node types, edge types, attributes, examples.',
+                        aliases: ['vgl', 'syntax', 'help'],
+                        action: () => window.open(URL_GUIDE),
+                    },
+                    {
+                        name: 'Notations gallery',
+                        desc: 'Browse all supported notations (ibis, cld, concept maps, timelines, …) with examples and use cases.',
+                        aliases: ['notations', 'examples'],
+                        action: () => window.open(URL_GALLERY),
+                    },
+                ],
+            },
+            {
+                type: 'group',
+                heading: 'Support',
+                items: [
+                    {
+                        name: 'Sponsor on GitHub',
+                        desc: 'Support continued development. The plugin will always be free and open source.',
+                        action: () => window.open(URL_SPONSOR),
+                    },
+                ],
+            },
+        ];
+    }
+
+    // Only Obsidian before 1.13 calls this; later versions render getSettingDefinitions().
     display(): void {
         const { containerEl } = this;
         containerEl.empty();
