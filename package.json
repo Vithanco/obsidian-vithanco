@@ -20,6 +20,6 @@
     "eslint": "^10.13.0",
     "eslint-plugin-obsidianmd": "^0.4.2",
     "obsidian": "latest",
-    "typescript": "^7.0.2"
+    "typescript": "~6.0.3"
   }
 }
