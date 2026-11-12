@@ -33,6 +33,7 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
+      - run: npm test
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
@@ -41,6 +42,16 @@ jobs:
           size=$(wc -c < main.js)
           echo "main.js is $size bytes"
           [ "$size" -le 5000000 ]
+      # The directory rebuilds main.js and flags a release that differs from its
+      # build, so the bundle must not depend on which Node version made it.
+      - run: cp main.js "$RUNNER_TEMP/main.node22.js"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: The same main.js on another Node version
+        run: |
+          npm run build
+          cmp main.js "$RUNNER_TEMP/main.node22.js"
 
   build:
     name: Build against the VGraph engine

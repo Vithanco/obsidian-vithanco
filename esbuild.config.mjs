@@ -2,7 +2,7 @@ import esbuild from 'esbuild';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { gzipSync } from 'zlib';
+import { gzipSync } from 'fflate';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProd = process.argv[2] === 'production';
@@ -34,12 +34,15 @@ if (isProd) {
 }
 
 // Obsidian Sync's Standard plan will not sync a file over 5 MB, and main.js carries
-// the engine. Gzipped it fits; src/vgraph-loader.ts unpacks it on load.
+// the engine. Gzipped it fits; src/vgraph-loader.ts unpacks it on load. fflate, not
+// Node's zlib: zlib's output differs between Node versions, and Obsidian's review
+// rebuilds main.js and flags a release that does not match byte for byte.
+// mtime 0 keeps the build time out of the gzip header.
 const gzippedWasm = {
     name: 'gzipped-wasm',
     setup(build) {
         build.onLoad({ filter: /\.wasm$/ }, (args) => ({
-            contents: gzipSync(fs.readFileSync(args.path), { level: 9 }),
+            contents: gzipSync(fs.readFileSync(args.path), { level: 9, mtime: 0 }),
             loader: 'binary',
         }));
     },
