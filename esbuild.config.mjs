@@ -2,7 +2,7 @@ import esbuild from 'esbuild';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { gzipSync } from 'zlib';
+import { gzipSync } from 'fflate';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProd = process.argv[2] === 'production';
@@ -15,11 +15,10 @@ const vendored = path.join(__dirname, 'vendor/Package');
 const wasmDst = path.join(__dirname, 'VGraphWasm.wasm');
 if (fs.existsSync(enginePackage)) {
     fs.copyFileSync(path.join(enginePackage, 'VGraphWasm.wasm'), wasmDst);
-    for (const file of fs.readdirSync(enginePackage)) {
-        if (/\.(js|d\.ts)$/.test(file)) fs.copyFileSync(path.join(enginePackage, file), path.join(vendored, file));
-    }
-    for (const file of ['browser.js', 'browser.d.ts', 'browser.worker.js']) {
-        fs.copyFileSync(path.join(enginePackage, 'platforms', file), path.join(vendored, 'platforms', file));
+    // Only the glue the plugin imports: its declarations live in src/engine.d.ts,
+    // and src/vgraph-loader.ts sets WASI up instead of the generated platform code.
+    for (const file of ['instantiate.js', 'runtime.js', 'bridge-js.js']) {
+        fs.copyFileSync(path.join(enginePackage, file), path.join(vendored, file));
     }
     console.log('Refreshed VGraphWasm.wasm and vendor/Package from ../website/Package/');
 }
@@ -35,12 +34,15 @@ if (isProd) {
 }
 
 // Obsidian Sync's Standard plan will not sync a file over 5 MB, and main.js carries
-// the engine. Gzipped it fits; src/vgraph-loader.ts unpacks it on load.
+// the engine. Gzipped it fits; src/vgraph-loader.ts unpacks it on load. fflate, not
+// Node's zlib: zlib's output differs between Node versions, and Obsidian's review
+// rebuilds main.js and flags a release that does not match byte for byte.
+// mtime 0 keeps the build time out of the gzip header.
 const gzippedWasm = {
     name: 'gzipped-wasm',
     setup(build) {
         build.onLoad({ filter: /\.wasm$/ }, (args) => ({
-            contents: gzipSync(fs.readFileSync(args.path), { level: 9 }),
+            contents: gzipSync(fs.readFileSync(args.path), { level: 9, mtime: 0 }),
             loader: 'binary',
         }));
     },
@@ -63,16 +65,8 @@ const context = await esbuild.context({
     // Obsidian's installer only downloads main.js + manifest.json + styles.css,
     // so the WASM has to live in main.js.
     plugins: [gzippedWasm],
+    alias: { 'vgraph-engine': './vendor/Package/instantiate.js' },
     logLevel: 'info',
-    // Silence warnings from the BridgeJS-generated files in vendor/Package/:
-    //   empty-import-meta — index.js uses import.meta.url for a fetch path we never hit
-    //     (we pass `module` directly, so the fetch branch is dead code).
-    //   duplicate-object-key — generator emits two `getImports` keys in browser.js.
-    // Both are upstream generator quirks; suppressing keeps the build output clean.
-    logOverride: {
-        'empty-import-meta': 'silent',
-        'duplicate-object-key': 'silent',
-    },
     sourcemap: isProd ? false : 'inline',
     treeShaking: true,
     outfile: 'main.js',

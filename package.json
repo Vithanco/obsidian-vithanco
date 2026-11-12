@@ -21,6 +21,7 @@
     "esbuild": "^0.28.2",
     "eslint": "^10.14.0",
     "eslint-plugin-obsidianmd": "^0.5.1",
+    "fflate": "^0.8.3",
     "obsidian": "^1.14.4",
     "typescript": "~6.0.3"
   }

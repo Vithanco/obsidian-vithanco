@@ -1,5 +1,5 @@
-import { init } from '../vendor/Package/index.js';
-import type { Exports } from '../vendor/Package/bridge-js.js';
+import { ConsoleStdout, File, OpenFile, PreopenDirectory, WASI } from '@bjorn3/browser_wasi_shim';
+import { instantiate, MODULE_PATH, type WASI as EngineWASI } from 'vgraph-engine';
 import gzippedWasm from '../VGraphWasm.wasm';
 
 export type RenderVGL = (vgl: string, darkMode?: boolean) => Promise<string>;
@@ -9,10 +9,32 @@ async function gunzip(bytes: Uint8Array<ArrayBuffer>): Promise<ArrayBuffer> {
     return new Response(stream).arrayBuffer();
 }
 
+// The engine writes its debug output and Graphviz's warnings to stdout and stderr.
+// None of it is for the user, and Obsidian asks plugins not to log, so both are
+// discarded; a real failure still arrives as an exception or an error in the SVG.
+function quietWasi(): EngineWASI {
+    const discard = (): void => undefined;
+    const wasi = new WASI([MODULE_PATH], [], [
+        new OpenFile(new File([])),
+        ConsoleStdout.lineBuffered(discard),
+        ConsoleStdout.lineBuffered(discard),
+        new PreopenDirectory('/', new Map()),
+    ], { debug: false });
+    type ShimInstance = typeof wasi.inst;
+    return {
+        wasiImport: wasi.wasiImport,
+        initialize: (instance) => wasi.initialize(instance as unknown as ShimInstance),
+        setInstance: (instance) => {
+            wasi.inst = instance as unknown as ShimInstance;
+        },
+    };
+}
+
 export async function initVithanco(): Promise<RenderVGL> {
-    const { exports }: { exports: Exports } = await init({
+    const { exports } = await instantiate({
         module: await gunzip(gzippedWasm),
         getImports: () => ({}),
+        wasi: quietWasi(),
     });
 
     // BEGIN SHARED CORE (keep in lockstep with vscode-vithanco/src/renderer.ts — `just parity`)

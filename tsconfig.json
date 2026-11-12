@@ -12,7 +12,8 @@
     "importHelpers": true,
     "isolatedModules": true,
     "strictNullChecks": true,
-    "lib": ["ES6", "DOM"]
+    "lib": ["ES2020", "DOM"],
+    "paths": { "vgraph-engine": ["./src/engine.d.ts"] }
   },
   "include": ["src/**/*.ts"]
 }
