@@ -54,7 +54,7 @@ For a version that isn't in the browser yet, or to install a pre-release:
 ## Requirements
 
 - Obsidian 1.4.0 or newer
-- Desktop only (mobile support planned)
+- On iPhone and iPad: iOS / iPadOS 16.4 or newer
 - No internet connection required — everything, including the Graphviz layout engine, is compiled into the bundled WebAssembly module. The plugin makes no network calls and does not read or write files outside your vault.
 
 ## How it works
