@@ -6,6 +6,8 @@
 /* Zoom (src/zoom.ts). Fit is plain CSS, so it follows the note's width. */
 .vithanco-zoom-viewport {
     overflow-x: auto;
+    /* One finger scrolls; a pinch is zoom.ts's, not the page's. */
+    touch-action: pan-x pan-y;
 }
 
 .vithanco-zoom-viewport svg {

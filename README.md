@@ -22,7 +22,7 @@ vgraph decision: IBIS "Should we ship the plugin?" {
 ```
 ````
 
-The block is replaced with a rendered SVG in reading view. It fits the note's width; hover it for − and + (or pinch on a trackpad, or ctrl+scroll) to zoom, and click the percentage to fit it again. On a phone or tablet the buttons are always shown.
+The block is replaced with a rendered SVG in reading view. It fits the note's width. To zoom, hover it for − and +, pinch it (with two fingers or on a trackpad), or ctrl+scroll; click the percentage to fit it again. On a phone or tablet the buttons are always shown.
 
 ## Supported notations
 
