@@ -31,6 +31,12 @@ function quietWasi(): EngineWASI {
 }
 
 export async function initVithanco(): Promise<RenderVGL> {
+    if (typeof WebAssembly === 'undefined') {
+        throw new Error('WebAssembly is turned off on this device (on iPhone and iPad, Lockdown Mode does this).');
+    }
+    if (typeof DecompressionStream === 'undefined') {
+        throw new Error('it needs iOS or iPadOS 16.4 or newer.');
+    }
     const { exports } = await instantiate({
         module: await gunzip(gzippedWasm),
         getImports: () => ({}),

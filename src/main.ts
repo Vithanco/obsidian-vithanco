@@ -2,7 +2,6 @@ import {
     App,
     Editor,
     MarkdownView,
-    Notice,
     Plugin,
     PluginSettingTab,
     Setting,
@@ -31,27 +30,21 @@ vgraph decision: IBIS "Should we ship the plugin?" {
 `;
 
 export default class VithancoPlugin extends Plugin {
-    private renderVGL: RenderVGL | null = null;
-    private initPromise: Promise<void> | null = null;
+    private engine: Promise<RenderVGL> | null = null;
     private lastTheme: 'dark' | 'light' | null = null;
 
     onload() {
-        this.initPromise = this.initializeRenderer();
-
         this.registerMarkdownCodeBlockProcessor('vgl', async (source, el) => {
-            await this.initPromise;
-
-            if (!this.renderVGL) {
-                this.renderError(
-                    el,
-                    'Vithanco plugin failed to initialize. Check the developer console.',
-                    false,
-                );
+            let renderVGL: RenderVGL;
+            try {
+                renderVGL = await this.startEngine();
+            } catch (err) {
+                this.renderError(el, `Could not start the diagram engine: ${messageOf(err)}`, false);
                 return;
             }
 
             try {
-                const svg = await this.renderVGL(source.trim(), this.isDarkTheme());
+                const svg = await renderVGL(source.trim(), this.isDarkTheme());
                 const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
                 const svgEl = doc.documentElement;
                 if (!svgEl || svgEl.tagName.toLowerCase() !== 'svg') {
@@ -67,8 +60,7 @@ export default class VithancoPlugin extends Plugin {
                 el.createDiv({ cls: 'vithanco-zoom-viewport' }).appendChild(svgEl);
                 bindZoom(el);
             } catch (err) {
-                const msg = err instanceof Error ? err.message : String(err);
-                this.renderError(el, msg, true);
+                this.renderError(el, messageOf(err), true);
             }
         });
 
@@ -124,18 +116,18 @@ export default class VithancoPlugin extends Plugin {
         }
     }
 
-    private async initializeRenderer(): Promise<void> {
-        try {
-            this.renderVGL = await initVithanco();
-        } catch (err) {
-            console.error('[Vithanco] Initialization failed:', err);
-            new Notice('Vithanco plugin failed to initialize. See console for details.');
-        }
+    private startEngine(): Promise<RenderVGL> {
+        this.engine ??= initVithanco();
+        return this.engine;
     }
 
     onunload() {
-        this.renderVGL = null;
+        this.engine = null;
     }
+}
+
+function messageOf(err: unknown): string {
+    return err instanceof Error ? err.message : String(err);
 }
 
 class VithancoSettingTab extends PluginSettingTab {
