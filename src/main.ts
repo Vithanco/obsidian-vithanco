@@ -9,6 +9,7 @@ import {
     type SettingDefinitionItem,
 } from 'obsidian';
 import { initVithanco, type RenderVGL } from './vgraph-loader';
+import { bindZoom } from './zoom';
 
 // External documentation URLs surfaced via README, settings tab, command palette,
 // and inline error messages so users always have a path to the syntax docs.
@@ -58,8 +59,13 @@ export default class VithancoPlugin extends Plugin {
                     return;
                 }
                 el.empty();
-                el.appendChild(svgEl);
                 el.addClass('vithanco-container');
+                const bar = el.createDiv({ cls: 'vithanco-zoom-bar' });
+                bar.createEl('button', { cls: 'vithanco-zoom-out', text: '−', attr: { type: 'button', 'aria-label': 'Zoom out' } });
+                bar.createEl('button', { cls: 'vithanco-zoom-reset', text: 'Auto', attr: { type: 'button', title: 'Fit to width' } });
+                bar.createEl('button', { cls: 'vithanco-zoom-in', text: '+', attr: { type: 'button', 'aria-label': 'Zoom in' } });
+                el.createDiv({ cls: 'vithanco-zoom-viewport' }).appendChild(svgEl);
+                bindZoom(el);
             } catch (err) {
                 const msg = err instanceof Error ? err.message : String(err);
                 this.renderError(el, msg, true);

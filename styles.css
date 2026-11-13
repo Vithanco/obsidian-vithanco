@@ -1,12 +1,84 @@
 .vithanco-container {
-    text-align: center;
+    position: relative;
     margin: 1em 0;
+}
+
+/* Zoom (src/zoom.ts). Fit is plain CSS, so it follows the note's width. */
+.vithanco-zoom-viewport {
     overflow-x: auto;
 }
 
-.vithanco-container svg {
+.vithanco-zoom-viewport svg {
+    display: block;
+    margin: 0 auto;
     max-width: 100%;
     height: auto;
+}
+
+.vithanco-zoom-fixed .vithanco-zoom-viewport svg {
+    width: var(--vithanco-zoom-width);
+    max-width: none;
+}
+
+/* Hidden until bound, so controls never show without the script behind them. */
+.vithanco-zoom-bar {
+    display: none;
+    position: absolute;
+    top: var(--size-2-2);
+    right: var(--size-2-2);
+    z-index: 1;
+    gap: var(--size-2-1);
+}
+
+/* Clear of the "edit this block" button live preview puts in the same corner. */
+.markdown-source-view .vithanco-zoom-bar {
+    right: calc(var(--size-4-8) + var(--size-2-2));
+}
+
+.vithanco-zoom-ready .vithanco-zoom-bar {
+    display: flex;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.vithanco-zoom-ready:hover .vithanco-zoom-bar,
+.vithanco-zoom-bar:focus-within {
+    opacity: 1;
+}
+
+/* Obsidian's mobile layout rather than (hover: none): an iPad with a trackpad can hover. */
+.is-mobile .vithanco-zoom-ready .vithanco-zoom-bar {
+    opacity: 1;
+}
+
+.is-mobile .vithanco-zoom-bar button {
+    min-width: var(--size-4-9);
+    min-height: var(--size-4-9);
+}
+
+.vithanco-zoom-bar button {
+    touch-action: manipulation;
+}
+
+.vithanco-zoom-bar button {
+    height: auto;
+    padding: var(--size-2-1) var(--size-4-2);
+    font-size: var(--font-ui-smaller);
+    color: var(--text-muted);
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    box-shadow: none;
+    cursor: var(--cursor);
+}
+
+.vithanco-zoom-bar button:hover {
+    color: var(--text-normal);
+    background: var(--background-modifier-hover);
+}
+
+.vithanco-zoom-reset {
+    min-width: 4em;
+    font-variant-numeric: tabular-nums;
 }
 
 .vithanco-error-block {
