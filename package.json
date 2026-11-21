@@ -1,6 +1,6 @@
 {
   "name": "obsidian-vithanco",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Obsidian plugin for rendering Vithanco diagrams (VGL).",
   "main": "main.js",
   "license": "Apache-2.0",
